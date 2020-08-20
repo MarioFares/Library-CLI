@@ -37,6 +37,7 @@ Note: no parameters but "specified value" means that there will be input() follo
 import sqlite3
 import cmd
 import os
+from glob import glob
 from colorama import init, Fore
 init(autoreset=True)
 
@@ -328,14 +329,20 @@ class App(cmd.Cmd):
         Will add the ebook name and path only to the table.
         All other fields remain blank.
         """
-        files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+        # files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+
+        # file_paths = [os.path.join(path, f) for f in files]
+        # with self.conn:
+        #     for name, path in zip(names, file_paths):
+        #         self.addbook(name, "", path, "", "")
         names = []
+        files = glob(path + '/**/*.*', recursive=True)
         for file in files:
-            file = file.split(".")
-            names.append(file[0])
-        file_paths = [os.path.join(path, f) for f in files]
+            file = os.path.basename(file)
+            name = os.path.splitext(file)[0]
+            names.append(name)
         with self.conn:
-            for name, path in zip(names, file_paths):
+            for name, path in zip(names, files):
                 self.addbook(name, "", path, "", "")
 
     def getid(self, name):
