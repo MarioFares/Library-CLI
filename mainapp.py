@@ -47,7 +47,7 @@ class App(cmd.Cmd):
     intro = "Welcome to Library CLI"
     prompt = ">>>"
     file = None
-    db = "./ebook.db"
+    db = "./ebooks.db"
 
     def __init__(self):
         """
@@ -73,12 +73,15 @@ class App(cmd.Cmd):
         Add a directory of ebooks or an ebook.
 
         Arg:         Param:                 Function:
-        dir          none                   adds all the files in a single directory
+        dir          <recur/nrecur>         adds all the files in a single directory
         book         none                   adds a book with specified values
 
 
         Name    > Must not be identical to any other name.
         Path    > Must be absolute path to the file.
+
+        add dir recur                       adds all files in directory and subdirectory
+        add dir nrecur                      adds all files in directory only
         """
         try:
             array = arg.split()
@@ -91,7 +94,12 @@ class App(cmd.Cmd):
                 self.addbook(name, author, path, folder, genre)
             elif array[0] == "dir":
                 directory = input(f"{Fore.BLUE}Path: ")
-                self.add_dir_files(directory)
+                if array[1] == "recur":
+                    self.add_dir_files(directory, True)
+                elif array[1] == "nrecur":
+                    self.add_dir_files(directory, False)
+                else:
+                    print(f"{Fore.RED}Input a correct argument.")
             else:
                 return print(f"{Fore.RED}Input a correct argument.")
             print(f"{Fore.GREEN}Operation Successful.")
@@ -322,21 +330,18 @@ class App(cmd.Cmd):
                                                                                     "genre": genre})
         print(f"{Fore.GREEN}Ebook added successfully.")
 
-    def add_dir_files(self, path):
+    def add_dir_files(self, path, rec):
         """
         Adds to the table all the files that are in a directory.
         Path of directory must be specified.
         Will add the ebook name and path only to the table.
         All other fields remain blank.
         """
-        # files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
-
-        # file_paths = [os.path.join(path, f) for f in files]
-        # with self.conn:
-        #     for name, path in zip(names, file_paths):
-        #         self.addbook(name, "", path, "", "")
         names = []
-        files = glob(path + '/**/*.*', recursive=True)
+        if rec:
+            files = glob(path + '/**/*.*', recursive=rec)
+        else:
+            files = glob(path + '/*.*', recursive=rec)
         for file in files:
             file = os.path.basename(file)
             name = os.path.splitext(file)[0]
@@ -344,6 +349,7 @@ class App(cmd.Cmd):
         with self.conn:
             for name, path in zip(names, files):
                 self.addbook(name, "", path, "", "")
+        print(f"\n{Fore.GREEN}{len(files)} Ebooks Added\n")
 
     def getid(self, name):
         """
